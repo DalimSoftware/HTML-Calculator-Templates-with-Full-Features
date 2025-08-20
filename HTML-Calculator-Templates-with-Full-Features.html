@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(45deg, #0a0a0a, #3a4452);
+        }
+        
+        .calculator {
+            background: #22252d;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 3px 15px rgba(113, 115, 119, 0.5);
+        }
+        
+        .display {
+            width: 100%;
+            height: 80px;
+            border: none;
+            background: transparent;
+            color: white;
+            text-align: right;
+            padding: 20px;
+            font-size: 30px;
+            margin-bottom: 10px;
+            cursor: default;
+        }
+        
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-gap: 10px;
+        }
+        
+        button {
+            border: none;
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            background: #2a2d37;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        button:hover {
+            background: #3a3e4a;
+        }
+        
+        button:active {
+            transform: scale(0.95);
+        }
+        
+        .operator {
+            color: #33ffd8;
+        }
+        
+        .equals {
+            background: #33ffd8;
+            color: #22252d;
+        }
+        
+        .equals:hover {
+            background: #2ce0bc;
+        }
+        
+        .clear, .delete {
+            color: #ff6b6b;
+        }
+        
+        @media (max-width: 400px) {
+            button {
+                width: 50px;
+                height: 50px;
+                font-size: 18px;
+            }
+            
+            .calculator {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <input type="text" class="display" readonly>
+        <div class="buttons">
+            <button class="clear">C</button>
+            <button class="delete">⌫</button>
+            <button class="operator">%</button>
+            <button class="operator">÷</button>
+            
+            <button>7</button>
+            <button>8</button>
+            <button>9</button>
+            <button class="operator">×</button>
+            
+            <button>4</button>
+            <button>5</button>
+            <button>6</button>
+            <button class="operator">-</button>
+            
+            <button>1</button>
+            <button>2</button>
+            <button>3</button>
+            <button class="operator">+</button>
+            
+            <button>0</button>
+            <button>.</button>
+            <button class="equals" style="grid-column: span 2">=</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const display = document.querySelector('.display');
+            const buttons = document.querySelectorAll('button');
+            let currentInput = '';
+            let previousInput = '';
+            let operation = null;
+            let shouldResetScreen = false;
+            
+            buttons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const buttonText = button.textContent;
+                    
+                    // Handle number buttons
+                    if (!isNaN(buttonText) || buttonText === '.') {
+                        if (shouldResetScreen) {
+                            display.value = '';
+                            shouldResetScreen = false;
+                        }
+                        
+                        // Prevent multiple decimal points
+                        if (buttonText === '.' && display.value.includes('.')) return;
+                        
+                        display.value += buttonText;
+                        currentInput = display.value;
+                    }
+                    
+                    // Handle operator buttons
+                    else if (['+', '-', '×', '÷', '%'].includes(buttonText)) {
+                        if (currentInput === '') return;
+                        
+                        if (previousInput !== '' && !shouldResetScreen) {
+                            calculate();
+                        }
+                        
+                        previousInput = currentInput;
+                        operation = buttonText;
+                        shouldResetScreen = true;
+                    }
+                    
+                    // Handle equals button
+                    else if (buttonText === '=') {
+                        if (previousInput === '' || currentInput === '' || operation === null) return;
+                        
+                        calculate();
+                        operation = null;
+                        shouldResetScreen = true;
+                    }
+                    
+                    // Handle clear button
+                    else if (buttonText === 'C') {
+                        display.value = '';
+                        currentInput = '';
+                        previousInput = '';
+                        operation = null;
+                    }
+                    
+                    // Handle delete button
+                    else if (buttonText === '⌫') {
+                        display.value = display.value.slice(0, -1);
+                        currentInput = display.value;
+                    }
+                });
+            });
+            
+            function calculate() {
+                let prev = parseFloat(previousInput);
+                let current = parseFloat(currentInput);
+                let result = 0;
+                
+                if (isNaN(prev) || isNaN(current)) return;
+                
+                switch (operation) {
+                    case '+':
+                        result = prev + current;
+                        break;
+                    case '-':
+                        result = prev - current;
+                        break;
+                    case '×':
+                        result = prev * current;
+                        break;
+                    case '÷':
+                        if (current === 0) {
+                            display.value = 'Error';
+                            currentInput = '';
+                            previousInput = '';
+                            operation = null;
+                            return;
+                        }
+                        result = prev / current;
+                        break;
+                    case '%':
+                        result = prev % current;
+                        break;
+                    default:
+                        return;
+                }
+                
+                // Round result to avoid floating point precision issues
+                result = Math.round(result * 1000000) / 1000000;
+                
+                display.value = result;
+                currentInput = result.toString();
+                previousInput = '';
+            }
+        });
+    </script>
+</body>
+</html>
